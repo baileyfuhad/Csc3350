@@ -1,6 +1,6 @@
 public class Employee {
     int empId;
-    String name; // We'll combine Fname and Lname here
+    String name; // Combined Fname and Lname
     double salary;
 
     public Employee(int empId, String name, double salary) {
@@ -9,7 +9,7 @@ public class Employee {
         this.salary = salary;
     }
 
-    // Getters for the Reports class to use later
+    // Getters for the Reports class
     public int getEmpId() { return empId; }
     public String getName() { return name; }
     public double getSalary() { return salary; }
