@@ -1,6 +1,6 @@
 public class Payroll {
-    int empId;
-    double amount;
+    public int empId;
+    public double amount;
 
     public Payroll(int empId, double amount) {
         this.empId = empId;
