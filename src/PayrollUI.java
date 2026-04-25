@@ -2,30 +2,41 @@ import java.util.List;
 import java.util.Scanner;
 
 public class PayrollUI {
+    private final PayrollService service = new PayrollService();
 
     public void showPayrollMenu() {
         Scanner sc = new Scanner(System.in);
-        PayrollService service = new PayrollService();
-
         System.out.println("=== Payroll Menu ===");
-        System.out.println("1. View Pay History");
+        System.out.println("1. View employee pay history");
         System.out.println("0. Back");
         System.out.print("Choose: ");
 
-        int choice = sc.nextInt();
+        int choice;
+        try {
+            choice = Integer.parseInt(sc.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid choice.");
+            return;
+        }
 
         if (choice == 1) {
-            System.out.print("Enter your Employee ID: ");
-            int id = sc.nextInt();
-
-            List<String> history = service.getEmployeePayHistory(id);
-
-            if (history.isEmpty()) {
-                System.out.println("No payroll records found.");
-            } else {
-                System.out.println("=== Pay History ===");
-                history.forEach(System.out::println);
+            System.out.print("Enter Employee ID: ");
+            try {
+                int id = Integer.parseInt(sc.nextLine().trim());
+                showPayHistory(id);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid Employee ID.");
             }
         }
+    }
+
+    public void showPayHistory(int empID) {
+        List<String> history = service.getEmployeePayHistory(empID);
+        if (history.isEmpty()) {
+            System.out.println("No payroll records found for empID " + empID + ".");
+            return;
+        }
+        System.out.println("=== Pay History (most recent first) ===");
+        history.forEach(System.out::println);
     }
 }

@@ -1,81 +1,111 @@
--- 1. Create a brand new, unique database
-CREATE DATABASE IF NOT EXISTS joshi_data;
-USE joshi_data;
+-- Company Z employee management schema
+DROP DATABASE IF EXISTS employee_management;
+CREATE DATABASE employee_management;
+USE employee_management;
 
-SET FOREIGN_KEY_CHECKS=0;
+CREATE TABLE states (
+    stateID INT NOT NULL AUTO_INCREMENT,
+    state_abbrev CHAR(2) NOT NULL,
+    PRIMARY KEY (stateID),
+    UNIQUE KEY uq_state_abbrev (state_abbrev)
+) ENGINE=InnoDB;
 
--- 2. Create Tables (Fresh and Clean)
-CREATE TABLE `division` (
-  `div_ID` int NOT NULL,
-  `Name` varchar(100) DEFAULT NULL,
-  `city` varchar(50) NOT NULL,
-  `addressLine1` varchar(50) NOT NULL,
-  `addressLine2` varchar(50) DEFAULT NULL,
-  `state` varchar(50) DEFAULT NULL,
-  `country` varchar(50) NOT NULL,
-  `postalCode` varchar(15) NOT NULL,
-  PRIMARY KEY (`div_ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE cities (
+    cityID INT NOT NULL AUTO_INCREMENT,
+    city_name VARCHAR(25) NOT NULL,
+    PRIMARY KEY (cityID)
+) ENGINE=InnoDB;
 
-CREATE TABLE `employees` (
-  `empid` int NOT NULL,
-  `Fname` varchar(65) NOT NULL,
-  `Lname` varchar(65) NOT NULL,
-  `email` varchar(65) NOT NULL,
-  `HireDate` date DEFAULT NULL,
-  `Salary` decimal(10,2) NOT NULL,
-  `SSN` varchar(12) DEFAULT NULL,
-  `addressID` int NOT NULL,
-  PRIMARY KEY (`empid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE addresses (
+    addressID INT NOT NULL AUTO_INCREMENT,
+    street VARCHAR(100) NOT NULL,
+    cityID INT NOT NULL,
+    stateID INT NOT NULL,
+    zip VARCHAR(10) NOT NULL,
+    DOB DATE NULL,
+    phone VARCHAR(15) NULL,
+    emergency_name VARCHAR(100) NULL,
+    emergency_phone VARCHAR(15) NULL,
+    PRIMARY KEY (addressID),
+    CONSTRAINT fk_address_city  FOREIGN KEY (cityID)  REFERENCES cities(cityID),
+    CONSTRAINT fk_address_state FOREIGN KEY (stateID) REFERENCES states(stateID)
+) ENGINE=InnoDB;
 
-CREATE TABLE `job_titles` (
-  `job_title_id` int NOT NULL,
-  `job_title` varchar(125) NOT NULL,
-  PRIMARY KEY (`job_title_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE employees (
+    empID INT NOT NULL AUTO_INCREMENT,
+    first_name VARCHAR(65) NOT NULL,
+    last_name VARCHAR(65) NOT NULL,
+    email VARCHAR(65) NULL,
+    hire_date DATE NULL,
+    salary DECIMAL(10,2) NOT NULL,
+    SSN VARCHAR(12) NULL,
+    addressID INT NULL,
+    PRIMARY KEY (empID),
+    CONSTRAINT fk_employee_address FOREIGN KEY (addressID) REFERENCES addresses(addressID)
+) ENGINE=InnoDB;
 
-CREATE TABLE `employee_division` (
-  `empid` int NOT NULL,
-  `div_ID` int NOT NULL,
-  PRIMARY KEY (`empid`),
-  CONSTRAINT `fk_emp_div_division` FOREIGN KEY (`div_ID`) REFERENCES `division` (`div_ID`),
-  CONSTRAINT `fk_emp_div_employee` FOREIGN KEY (`empid`) REFERENCES `employees` (`empid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE INDEX idx_employees_last_name ON employees(last_name);
+CREATE INDEX idx_employees_hire_date ON employees(hire_date);
 
-CREATE TABLE `employee_job_titles` (
-  `empid` int NOT NULL,
-  `job_title_id` int NOT NULL,
-  CONSTRAINT `fk_emp_job_employee` FOREIGN KEY (`empid`) REFERENCES `employees` (`empid`),
-  CONSTRAINT `fk_emp_job_title` FOREIGN KEY (`job_title_id`) REFERENCES `job_titles` (`job_title_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE division (
+    divID INT NOT NULL AUTO_INCREMENT,
+    division_name VARCHAR(100) NOT NULL,
+    city VARCHAR(50) NULL,
+    addressLine1 VARCHAR(100) NULL,
+    addressLine2 VARCHAR(100) NULL,
+    state VARCHAR(50) NULL,
+    country VARCHAR(50) NULL,
+    postalCode VARCHAR(15) NULL,
+    PRIMARY KEY (divID)
+) ENGINE=InnoDB;
 
-CREATE TABLE `addresses` (
-  `addressID` int NOT NULL AUTO_INCREMENT,
-  `street` varchar(100) NOT NULL,
-  `cityID` int NOT NULL,
-  `StateID` int NOT NULL,
-  `zip` varchar(10) NOT NULL,
-  `DOB` date DEFAULT NULL,
-  `Phone_num` varchar(15) DEFAULT NULL,
-  `Emergency_name` varchar(100) DEFAULT NULL,
-  `Emergency_phone` varchar(15) DEFAULT NULL,
-  PRIMARY KEY (`addressID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE job_titles (
+    job_titleID INT NOT NULL AUTO_INCREMENT,
+    job_title VARCHAR(125) NOT NULL,
+    PRIMARY KEY (job_titleID)
+) ENGINE=InnoDB;
 
-CREATE TABLE `payroll` (
-  `payID` int NOT NULL,
-  `pay_date` date DEFAULT NULL,
-  `earnings` decimal(8,2) DEFAULT NULL,
-  `fed_tax` decimal(7,2) DEFAULT NULL,
-  `fed_med` decimal(7,2) DEFAULT NULL,
-  `fed_SS` decimal(7,2) DEFAULT NULL,
-  `state_tax` decimal(7,2) DEFAULT NULL,
-  `retire_401k` decimal(7,2) DEFAULT NULL,
-  `health_care` decimal(7,2) DEFAULT NULL,
-  `empid` int DEFAULT NULL,
-  PRIMARY KEY (`payID`),
-  CONSTRAINT `fk_payroll_employee` FOREIGN KEY (`empid`) REFERENCES `employees` (`empid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE employee_division (
+    empID INT NOT NULL,
+    divID INT NOT NULL,
+    PRIMARY KEY (empID, divID),
+    CONSTRAINT fk_emp_div_employee FOREIGN KEY (empID) REFERENCES employees(empID) ON DELETE CASCADE,
+    CONSTRAINT fk_emp_div_division FOREIGN KEY (divID) REFERENCES division(divID)
+) ENGINE=InnoDB;
 
-SET FOREIGN_KEY_CHECKS=1;
+CREATE TABLE employee_job_titles (
+    empID INT NOT NULL,
+    job_titleID INT NOT NULL,
+    PRIMARY KEY (empID, job_titleID),
+    CONSTRAINT fk_emp_job_employee FOREIGN KEY (empID) REFERENCES employees(empID) ON DELETE CASCADE,
+    CONSTRAINT fk_emp_job_title    FOREIGN KEY (job_titleID) REFERENCES job_titles(job_titleID)
+) ENGINE=InnoDB;
+
+CREATE TABLE payroll (
+    payID INT NOT NULL AUTO_INCREMENT,
+    empID INT NOT NULL,
+    pay_date DATE NOT NULL,
+    gross_pay DECIMAL(10,2) NOT NULL,
+    fed_tax DECIMAL(8,2) DEFAULT 0,
+    fed_med DECIMAL(8,2) DEFAULT 0,
+    fed_SS DECIMAL(8,2) DEFAULT 0,
+    state_tax DECIMAL(8,2) DEFAULT 0,
+    retire_401k DECIMAL(8,2) DEFAULT 0,
+    health_care DECIMAL(8,2) DEFAULT 0,
+    net_pay DECIMAL(10,2) NOT NULL,
+    PRIMARY KEY (payID),
+    CONSTRAINT fk_payroll_employee FOREIGN KEY (empID) REFERENCES employees(empID) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE INDEX idx_payroll_pay_date ON payroll(pay_date);
+CREATE INDEX idx_payroll_emp ON payroll(empID);
+
+CREATE TABLE app_user (
+    empID INT NOT NULL,
+    username VARCHAR(50) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL,
+    PRIMARY KEY (empID),
+    UNIQUE KEY uq_username (username),
+    CONSTRAINT fk_app_user_employee FOREIGN KEY (empID) REFERENCES employees(empID) ON DELETE CASCADE
+) ENGINE=InnoDB;

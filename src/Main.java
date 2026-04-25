@@ -59,8 +59,9 @@ public class Main {
             System.out.println("2. Search employee (edit)");
             System.out.println("3. Update employee");
             System.out.println("4. Delete employee");
-            System.out.println("5. Payroll");
-            System.out.println("6. Reports");
+            System.out.println("5. Increase salary by % within range");
+            System.out.println("6. Payroll");
+            System.out.println("7. Reports");
         } else {
             System.out.println("1. View my information");
             System.out.println("2. View my pay history");
@@ -74,8 +75,9 @@ public class Main {
             case 2: employeeDAO.searchEmployee(); return true;
             case 3: employeeDAO.updateEmployee(); return true;
             case 4: employeeDAO.deleteEmployee(); return true;
-            case 5: payrollUI.showPayrollMenu(); return true;
-            case 6: reportsUI.showReportsMenu(); return true;
+            case 5: employeeDAO.increaseSalaryByPercentInRange(); return true;
+            case 6: payrollUI.showPayrollMenu(); return true;
+            case 7: reportsUI.showReportsMenu(); return true;
             case 0:
                 System.out.println("Exiting system.");
                 return false;

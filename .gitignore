@@ -1,0 +1,6 @@
+*.class
+build/
+.vscode/
+.idea/
+.claude/
+docs/joshua-branch-review.md
