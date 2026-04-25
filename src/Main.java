@@ -5,14 +5,16 @@ public class Main {
     private final DBConnection dbConnection;
     private final Login login;
     private final EmployeeDAO employeeDAO;
-    private final Reports reports;
+    private final PayrollUI payrollUI;
+    private final ReportsUI reportsUI;
 
     public Main() {
         scanner = new Scanner(System.in);
         dbConnection = new DBConnection();
         login = new Login();
         employeeDAO = new EmployeeDAO();
-        reports = new Reports();
+        payrollUI = new PayrollUI();
+        reportsUI = new ReportsUI();
     }
 
     public static void main(String[] args) {
@@ -26,90 +28,77 @@ public class Main {
         System.out.println("==================================");
 
         dbConnection.connect();
-        login.showLogin();
+
+        User user = login.showLogin();
+        if (user == null) {
+            System.out.println("Exiting system.");
+            scanner.close();
+            return;
+        }
 
         boolean running = true;
         while (running) {
-            printMainMenu();
+            printMainMenu(user);
             int choice = readInt("Choose an option: ");
 
-            switch (choice) {
-                case 1:
-                    employeeDAO.addEmployee();
-                    break;
-                case 2:
-                    employeeDAO.searchEmployee();
-                    break;
-                case 3:
-                    employeeDAO.updateEmployee();
-                    break;
-                case 4:
-                    employeeDAO.deleteEmployee();
-                    break;
-                case 5:
-                    showPayrollMenu();
-                    break;
-                case 6:
-                    showReportsMenu();
-                    break;
-                case 0:
-                    running = false;
-                    System.out.println("Exiting system.");
-                    break;
-                default:
-                    System.out.println("Invalid option. Please try again.");
+            if (user.isAdmin()) {
+                running = handleAdminChoice(choice);
+            } else {
+                running = handleEmployeeChoice(choice, user);
             }
-
             System.out.println();
         }
 
         scanner.close();
     }
 
-    private void printMainMenu() {
-        System.out.println("Main Menu");
-        System.out.println("1. Add employee");
-        System.out.println("2. Search employee");
-        System.out.println("3. Update employee");
-        System.out.println("4. Delete employee");
-        System.out.println("5. Payroll");
-        System.out.println("6. Reports");
+    private void printMainMenu(User user) {
+        System.out.println("Main Menu (" + user.getRole() + ")");
+        if (user.isAdmin()) {
+            System.out.println("1. Add employee");
+            System.out.println("2. Search employee (edit)");
+            System.out.println("3. Update employee");
+            System.out.println("4. Delete employee");
+            System.out.println("5. Payroll");
+            System.out.println("6. Reports");
+        } else {
+            System.out.println("1. View my information");
+            System.out.println("2. View my pay history");
+        }
         System.out.println("0. Exit");
     }
 
-    private void showPayrollMenu() {
-        System.out.println("Payroll Menu");
-        System.out.println("1. Create sample payroll record");
-        System.out.println("0. Back");
-
-        int choice = readInt("Choose an option: ");
-        if (choice == 1) {
-            int empId = readInt("Enter employee ID: ");
-            double amount = readDouble("Enter payroll amount: ");
-            Payroll payroll = new Payroll(empId, amount);
-            System.out.println("Payroll record prepared for employee " + payroll.empId
-                    + " with amount $" + String.format("%.2f", payroll.amount));
+    private boolean handleAdminChoice(int choice) {
+        switch (choice) {
+            case 1: employeeDAO.addEmployee(); return true;
+            case 2: employeeDAO.searchEmployee(); return true;
+            case 3: employeeDAO.updateEmployee(); return true;
+            case 4: employeeDAO.deleteEmployee(); return true;
+            case 5: payrollUI.showPayrollMenu(); return true;
+            case 6: reportsUI.showReportsMenu(); return true;
+            case 0:
+                System.out.println("Exiting system.");
+                return false;
+            default:
+                System.out.println("Invalid option. Please try again.");
+                return true;
         }
     }
 
-    private void showReportsMenu() {
-        System.out.println("Reports Menu");
-        System.out.println("1. Monthly pay report");
-        System.out.println("2. Division report");
-        System.out.println("0. Back");
-
-        int choice = readInt("Choose an option: ");
+    private boolean handleEmployeeChoice(int choice, User user) {
         switch (choice) {
             case 1:
-                reports.monthlyPayReport();
-                break;
+                employeeDAO.viewEmployee(user.getEmpID());
+                return true;
             case 2:
-                reports.divisionReport();
-                break;
+                payrollUI.showPayHistory(user.getEmpID());
+                return true;
             case 0:
-                break;
+                System.out.println("Exiting system.");
+                return false;
             default:
-                System.out.println("Invalid option. Returning to main menu.");
+                System.out.println("Invalid option. Please try again.");
+                return true;
         }
     }
 
@@ -117,24 +106,10 @@ public class Main {
         while (true) {
             System.out.print(prompt);
             String input = scanner.nextLine().trim();
-
             try {
                 return Integer.parseInt(input);
             } catch (NumberFormatException ex) {
                 System.out.println("Please enter a valid whole number.");
-            }
-        }
-    }
-
-    private double readDouble(String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            String input = scanner.nextLine().trim();
-
-            try {
-                return Double.parseDouble(input);
-            } catch (NumberFormatException ex) {
-                System.out.println("Please enter a valid number.");
             }
         }
     }

@@ -3,21 +3,21 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBConnection {
-    private static final String URL = "jdbc:mysql://localhost:3306/joshi_data";
-    private static final String USER = "root"; 
-    private static final String PASS = "your_password"; // Use your actual MySQL password
-
-    public void connect() {
-    try (Connection conn = getConnection()) {
-        if (conn != null && !conn.isClosed()) {
-            System.out.println("Successfully linked to Database: employeedata");
-        }
-    } catch (SQLException e) {
-        System.out.println("Database link failed. Update your password in DBConnection.java");
-    }
-}
+    private static final String URL = "jdbc:mysql://localhost:3306/employee_management";
+    private static final String USER = "your_user";
+    private static final String PASSWORD = "your_password";
 
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASS);
+        return DriverManager.getConnection(URL, USER, PASSWORD);
+    }
+
+    public void connect() {
+        try (Connection conn = getConnection()) {
+            if (conn != null && !conn.isClosed()) {
+                System.out.println("Connected to database: employee_management");
+            }
+        } catch (SQLException e) {
+            System.out.println("Database connection failed. Update credentials in DBConnection.java.");
+        }
     }
 }
